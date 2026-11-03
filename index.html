@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mad Libs Story Generator</title>
+<style>
+:root{
+  --bg:#fff8e7; --surface:#ffffff; --ink:#1d2a44; --muted:#5b6784; --line:#1d2a44;
+  --accent:#ff5a5f; --accent2:#ffd23f; --ok:#2a9d8f;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141b2d; --surface:#1e2740; --ink:#f4efe0; --muted:#a8b2cc; --line:#f4efe0;
+    --accent:#ff7a7f; --accent2:#ffd23f; --ok:#5ccfc0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141b2d; --surface:#1e2740; --ink:#f4efe0; --muted:#a8b2cc; --line:#f4efe0;
+  --accent:#ff7a7f; --accent2:#ffd23f; --ok:#5ccfc0;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.55}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+header{text-align:center;padding:12px 0 8px}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(2rem,8vw,3rem);margin:0;letter-spacing:-.02em;transform:rotate(-1.5deg);display:inline-block;background:var(--accent2);color:#1d2a44;padding:2px 14px;border:3px solid var(--line);box-shadow:5px 5px 0 var(--line)}
+.sub{color:var(--muted);margin:18px 0 0}
+nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:22px 0}
+button,select,input{font:inherit;color:var(--ink)}
+.tab{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.card{background:var(--surface);border:3px solid var(--line);border-radius:12px;padding:20px;box-shadow:6px 6px 0 var(--line)}
+label{display:block;font-weight:700;margin:14px 0 4px}
+.hint{font-weight:400;color:var(--muted);font-size:.9rem}
+input[type=text]{width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:8px;background:var(--bg)}
+input.bad{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--bg))}
+.err{color:var(--accent);font-size:.9rem;min-height:1.2em;margin:2px 0 0}
+fieldset{border:0;padding:0;margin:18px 0 0}
+legend{font-weight:700;margin-bottom:6px}
+.opt{display:flex;gap:10px;align-items:center;padding:8px 10px;border:2px solid transparent;border-radius:8px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--line);background:var(--bg)}
+.go{margin-top:22px;width:100%;background:var(--accent);color:#fff;font-weight:700;font-size:1.1rem;border:3px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;box-shadow:4px 4px 0 var(--line)}
+.go:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--line)}
+.ghost{background:var(--surface);border:2px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+.story h2{font-family:Georgia,serif;margin:0 0 4px}
+.story p{margin:0 0 14px;font-family:Georgia,serif;font-size:1.08rem;line-height:1.7}
+.story mark{background:var(--accent2);color:#1d2a44;padding:0 4px;border-radius:3px}
+.moral{border-top:3px dashed var(--line);padding-top:14px;font-weight:700;color:var(--ok)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.row .go{margin:0;flex:1;width:auto;min-width:140px}
+[hidden]{display:none!important}
+ul{padding-left:1.2em}
+@media (prefers-reduced-motion:no-preference){.story{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.97);opacity:0}}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Mad Libs</h1>
+  <p class="sub">Fill in the blanks and get a short story with a moral.</p>
+</header>
+
+<nav role="tablist" aria-label="Sections">
+  <button class="tab" role="tab" id="t-make" aria-selected="true">Make a story</button>
+  <button class="tab" role="tab" id="t-about" aria-selected="false">About</button>
+</nav>
+
+<section id="make">
+  <div class="card" id="formCard">
+    <form id="f" novalidate>
+      <label for="name">Name</label>
+      <input type="text" id="name" autocomplete="off">
+      <p class="err" data-for="name"></p>
+
+      <label for="adjective">Adjective <span class="hint">e.g. lazy</span></label>
+      <input type="text" id="adjective" autocomplete="off">
+      <p class="err" data-for="adjective"></p>
+
+      <label for="goal">Goal <span class="hint">e.g. become a topper</span></label>
+      <input type="text" id="goal" autocomplete="off">
+      <p class="err" data-for="goal"></p>
+
+      <label for="friend">Friend’s name</label>
+      <input type="text" id="friend" autocomplete="off">
+      <p class="err" data-for="friend"></p>
+
+      <label for="action">Action <span class="hint">e.g. study</span></label>
+      <input type="text" id="action" autocomplete="off">
+      <p class="err" data-for="action"></p>
+
+      <label for="animal">Animal <span class="hint">e.g. monkey</span></label>
+      <input type="text" id="animal" autocomplete="off">
+      <p class="err" data-for="animal"></p>
+
+      <fieldset>
+        <legend>Choose a story</legend>
+        <label class="opt"><input type="radio" name="story" value="0" checked> The Power of Hard Work</label>
+        <label class="opt"><input type="radio" name="story" value="1"> Never Give Up</label>
+        <label class="opt"><input type="radio" name="story" value="2"> One Step at a Time</label>
+        <label class="opt"><input type="radio" name="story" value="r"> Surprise me</label>
+      </fieldset>
+
+      <button class="go" type="submit">Write my story</button>
+    </form>
+  </div>
+
+  <div class="card story" id="result" hidden aria-live="polite">
+    <h2 id="rTitle"></h2>
+    <div id="rBody"></div>
+    <div class="row">
+      <button class="go" id="again" type="button">Another version</button>
+      <button class="go" id="edit" type="button" style="background:var(--surface);color:var(--ink)">Change words</button>
+      <button class="ghost" id="copy" type="button">Copy story</button>
+    </div>
+  </div>
+</section>
+
+<section id="about" hidden>
+  <div class="card">
+    <h2 style="font-family:Georgia,serif;margin-top:0">About this project</h2>
+    <p>Mad Libs Generator is a story app. It uses your words to create a short story, and every story ends with a moral.</p>
+    <ul>
+      <li>Six words go in: name, adjective, goal, friend, action, animal.</li>
+      <li>Three story templates, or let the app pick one at random.</li>
+      <li>Empty fields are flagged before a story is written.</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<script>
+(function(){
+  var KEYS=["name","adjective","goal","friend","action","animal"];
+  var TITLES=["The Power of Hard Work","Never Give Up","One Step at a Time"];
+
+  var T=[
+    function(w){return [
+      "One day, "+w.name+" wanted to "+w.goal+". But "+w.name+" was feeling very "+w.adjective+" and kept making excuses.",
+      "One day, "+w.friend+" advised "+w.name+" to stop wasting time and start working hard. Even a little progress every day can make a big difference.",
+      "Finally, "+w.name+" decided to "+w.action+" regularly and started moving towards the goal. Meanwhile, a "+w.animal+" outside the window seemed to be cheering for "+w.name+"!"
+    ].concat(["Small efforts every day lead to big success!"]);},
+    function(w){return [
+      "One morning, "+w.name+" decided to "+w.goal+". Feeling "+w.adjective+", "+w.name+" almost gave up before even starting.",
+      "Then "+w.friend+" said, ‘Stop dreaming and take action!’ So "+w.name+" began to "+w.action+" every day. Even a "+w.animal+" seemed more hardworking that day!",
+      "After some time, "+w.name+" made real progress and felt proud of not giving up.",
+      "Believe in yourself, but remember to work for what you want!"
+    ];},
+    function(w){return [
+      w.name+" wanted to "+w.goal+" but had one problem: being too "+w.adjective+"!",
+      w.friend+" challenged "+w.name+" to "+w.action+" for a little time every day. Surprisingly, even a "+w.animal+" seemed to be more focused than "+w.name+" at first!",
+      "Instead of feeling bad, "+w.name+" laughed, made a plan, and kept trying. Slowly, things started getting better.",
+      "Don’t compare yourself with others. Improve yourself one step at a time!"
+    ];}
+  ];
+
+  var $=function(id){return document.getElementById(id)};
+  var last=-1, words=null;
+
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+  function validate(){
+    var ok=true, w={};
+    KEYS.forEach(function(k){
+      var el=$(k), v=el.value.trim(), e=document.querySelector('[data-for="'+k+'"]');
+      if(!v){ok=false;el.classList.add("bad");e.textContent="Enter a "+(k==="friend"?"friend’s name":k)+" to continue."}
+      else{el.classList.remove("bad");e.textContent="";w[k]=v}
+    });
+    return ok?w:null;
+  }
+
+  function render(idx){
+    last=idx;
+    var parts=T[idx](words), moral=parts.pop();
+    var html=parts.map(function(p){
+      var s=esc(p);
+      KEYS.forEach(function(k){ s=s.split(esc(words[k])).join("\u0001"+esc(words[k])+"\u0002") });
+      return "<p>"+s.split("\u0001").join("<mark>").split("\u0002").join("</mark>")+"</p>";
+    }).join("");
+    html+='<p class="moral">Moral: '+esc(moral)+"</p>";
+    $("rTitle").textContent=TITLES[idx];
+    $("rBody").innerHTML=html;
+    $("formCard").hidden=true; $("result").hidden=false;
+    $("rTitle").scrollIntoView({block:"start"});
+  }
+
+  function pick(){
+    var v=document.querySelector('input[name="story"]:checked').value;
+    return v==="r"?Math.floor(Math.random()*3):parseInt(v,10);
+  }
+
+  $("f").addEventListener("submit",function(e){
+    e.preventDefault();
+    var w=validate(); if(!w) return;
+    words=w; render(pick());
+  });
+
+  $("again").onclick=function(){
+    var n; do{n=Math.floor(Math.random()*3)}while(n===last);
+    render(n);
+  };
+  $("edit").onclick=function(){ $("result").hidden=true; $("formCard").hidden=false; };
+  $("copy").onclick=function(){
+    var t=$("rTitle").textContent+"\n\n"+Array.prototype.map.call($("rBody").children,function(p){return p.textContent}).join("\n\n");
+    var b=$("copy");
+    function done(m){b.textContent=m;setTimeout(function(){b.textContent="Copy story"},1600)}
+    try{navigator.clipboard.writeText(t).then(function(){done("Copied")},function(){done("Copy failed")})}catch(x){done("Copy failed")}
+  };
+
+  function tab(which){
+    var make=which==="make";
+    $("make").hidden=!make; $("about").hidden=make;
+    $("t-make").setAttribute("aria-selected",make); $("t-about").setAttribute("aria-selected",!make);
+  }
+  $("t-make").onclick=function(){tab("make")};
+  $("t-about").onclick=function(){tab("about")};
+})();
+</script>
+</body>
+</html>
